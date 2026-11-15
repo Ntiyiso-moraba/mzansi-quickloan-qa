@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MzansiQuickLoan - Personal Loan Origination Portal</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f9; padding: 30px; }
+    .container { max-width: 520px; margin: auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2 { color: #1b365d; margin-top: 0; }
+    label { display: block; margin-top: 12px; font-weight: bold; font-size: 14px; }
+    input, select { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { margin-top: 20px; width: 100%; padding: 12px; background: #007a3d; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    button:hover { background: #005c2e; }
+    #result { margin-top: 20px; padding: 15px; border-radius: 4px; display: none; font-size: 14px; }
+    .approved { background: #e6f4ea; border: 1px solid #34a853; color: #137333; }
+    .declined { background: #fce8e6; border: 1px solid #ea4335; color: #c5221f; }
+    .error { background: #fef7e0; border: 1px solid #fbbc04; color: #b06000; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>MzansiQuickLoan Portal</h2>
+  <p style="font-size:13px; color:#555;">Instant South African Micro-Loan Assessment (R1,000 – R50,000)</p>
+
+  <label for="fullName">Full Name</label>
+  <input type="text" id="fullName" placeholder="e.g. Thabo Mokoena">
+
+  <label for="saId">South African ID Number (13 Digits)</label>
+  <input type="text" id="saId" placeholder="e.g. 9505125012081">
+
+  <label for="income">Net Monthly Income (ZAR)</label>
+  <input type="number" id="income" placeholder="e.g. 15000">
+
+  <label for="debt">Existing Monthly Debt Obligations (ZAR)</label>
+  <input type="number" id="debt" placeholder="e.g. 2000">
+
+  <label for="creditScore">Credit Score (300 - 850)</label>
+  <input type="number" id="creditScore" placeholder="e.g. 650">
+
+  <label for="loanAmount">Requested Loan Amount (R1,000 - R50,000)</label>
+  <input type="number" id="loanAmount" placeholder="e.g. 10000">
+
+  <label for="term">Repayment Term (Months)</label>
+  <select id="term">
+    <option value="6">6 Months</option>
+    <option value="12" selected>12 Months</option>
+    <option value="24">24 Months</option>
+  </select>
+
+  <button id="submitBtn" onclick="assessLoan()">Assess Loan Application</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+function assessLoan() {
+  const name = document.getElementById('fullName').value.trim();
+  const saId = document.getElementById('saId').value.trim();
+  const income = parseFloat(document.getElementById('income').value);
+  const debt = parseFloat(document.getElementById('debt').value) || 0;
+  const creditScore = parseInt(document.getElementById('creditScore').value);
+  const amount = parseFloat(document.getElementById('loanAmount').value);
+  const term = parseInt(document.getElementById('term').value);
+  const resultDiv = document.getElementById('result');
+
+  resultDiv.style.display = 'block';
+
+  // Basic empty check
+  if (!name || !saId || isNaN(income) || isNaN(creditScore) || isNaN(amount)) {
+    resultDiv.className = 'error';
+    resultDiv.innerHTML = '<strong>Validation Error:</strong> Please complete all required fields.';
+    return;
+  }
+
+  // Requirement 1: 13-digit ID check
+  if (saId.length !== 13) {
+    resultDiv.className = 'error';
+    resultDiv.innerHTML = '<strong>Validation Error:</strong> SA ID must be exactly 13 digits.';
+    return;
+  }
+
+  // Requirement 2: Loan amount limits (R1,000 - R50,000)
+  if (amount < 1000 || amount > 50000) {
+    resultDiv.className = 'error';
+    resultDiv.innerHTML = '<strong>Validation Error:</strong> Loan amount must be between R1,000 and R50,000.';
+    return;
+  }
+
+  // Requirement 4: Credit score check (Min 600)
+  if (creditScore <= 600) {
+    resultDiv.className = 'declined';
+    resultDiv.innerHTML = '<strong>Application Declined:</strong> Credit score does not meet minimum requirement of 600.';
+    return;
+  }
+
+  // Requirement 5: Interest & Monthly Installment
+  const totalRepayable = amount + (amount * 0.15);
+  const monthlyInstallment = totalRepayable / term;
+
+  // Requirement 3: Affordability check (Max 30% of Net Income)
+  const disposableIncome = income - debt;
+  const maxAllowedInstallment = income * 0.30;
+
+  if (monthlyInstallment > maxAllowedInstallment) {
+    resultDiv.className = 'declined';
+    resultDiv.innerHTML = `<strong>Application Declined:</strong> Monthly installment (R${monthlyInstallment.toFixed(2)}) exceeds 30% affordability limit.`;
+    return;
+  }
+
+  resultDiv.className = 'approved';
+  resultDiv.innerHTML = `<strong>Application Approved!</strong><br>Applicant: ${name}<br>Total Repayable: R${totalRepayable.toFixed(2)}<br>Monthly Installment: R${monthlyInstallment.toFixed(2)} for ${term} months.`;
+}
+</script>
+</body>
+</html>
+
